@@ -1,47 +1,81 @@
 ---
-name: SKILL_SLUG
-description: ONE sentence — what the skill does AND when to trigger it. Pack trigger phrases a user would actually type ("do X", "fix Y", "set up Z") right into this line; the agent matches on it. Keep it specific and verb-led. Replace this whole block.
+name: build-in-public
+description: Turn a shipped release into review-ready "build in public" drafts — generates an X/Twitter thread, a LinkedIn post, and (for major releases) a Product Hunt launch kit from the repo's changelog, as English drafts you edit before posting. Use when the user wants to announce a release, build in public, write a launch thread or post, draft a Product Hunt launch, or share dev progress publicly after tagging a version.
 ---
 
-# Skill Title
+# Build in Public
 
-One-paragraph orientation: what this skill installs/does and the shape of the
-work. Lead with the outcome, not the mechanism.
+Turn a release into ready-to-edit launch copy. The skill reads the changelog
+since the previous release, learns the product's voice from the repo, and writes
+one English draft per channel — X/Twitter thread, LinkedIn post, and (for major
+releases) a Product Hunt launch kit — into `build-in-public/<tag>/`. It drafts,
+it never posts: you review the files, edit, and publish manually.
 
 ```
-Step1 → Step2 → [human-in-the-loop gate] → Step3 → Verify → Clean up
+Resolve release → Changelog → Project context → Draft per channel → [you review the files] → Report + checklist
 ```
 
-## 1. <First phase>
+## 1. Resolve the release
 
-Concrete, ordered instructions the agent follows. Prefer imperative voice
-("Copy X", "Run Y", "Read one generated file and spot-check"). State the *why*
-only where a future maintainer would otherwise simplify away something
-load-bearing.
+- **Tag** — use the tag the user names. If none, list candidates
+  (`git tag --sort=-v:refname | head`) and confirm the latest version tag.
+- **Major?** — a release is *major* when the tag is `vX.0.0` (semver major
+  bump) or the user calls it a launch/major. Major releases get the Product
+  Hunt kit; others get X + LinkedIn only.
+- **Series** — a repo may hold several tag series (e.g. `v*` app tags and
+  `server-v*` worker tags). Stay within the series of the tag you announce; the
+  changelog helper does this automatically.
 
-## 2. <Second phase>
+## 2. Build the changelog
 
-- Bullet the decision points (single repo vs. workspace, language coverage…).
-- Reference bundled assets by path: `assets/<file>`, `scripts/<file>`.
-- Call out the human-in-the-loop gates explicitly if any.
+Run the bundled helper from inside the target repo:
 
-## 3. Validate
+```bash
+bash <skill-dir>/scripts/changelog.sh <tag>          # auto-detects previous tag
+bash <skill-dir>/scripts/changelog.sh <tag> <prev>   # explicit range
+```
 
-Don't declare success blind. List the gates: syntax, a real run, an edge-case
-check, and a measured recall/behavior check. A gate exists because skipping it
-shipped a bug at least once — say so.
+It prints grouped **Features / Fixes / Improvements** (Conventional Commits, PR
+refs preserved) and counts pure maintenance commits instead of listing them.
+Logic + manual fallback for non-conventional histories: `references/changelog.md`.
 
-## 4. Report
+**Curate — the changelog is raw material, not the post.** Pick the 2–4 changes a
+user actually cares about and say them in plain language, not commit-speak.
 
-Summarize for the user: what was installed/changed, measurements, a
-gate/pass/evidence table, and what was skipped.
+## 3. Learn the project's voice
 
-<!--
-TEMPLATE NOTES (delete this block when authoring):
-- `name` MUST be the kebab-case slug and MUST match the repo skill dir name.
-- `description` is the single most important line — it drives triggering.
-  Write it last, after the body exists. Front-load trigger phrases.
-- Keep SKILL.md lean; push long material into references/*.md, code into
-  scripts/ or assets/. The agent reads references on demand.
-- Run the skill-creator skill to lint description quality if available.
--->
+Gather, don't invent:
+
+- **What it is** — one line. Sources: repo `README`, `CLAUDE.md`,
+  `package.json` `description`.
+- **Links** — website / download / repo (`git remote get-url origin`), and the
+  release URL if one exists (`gh release view <tag> --json url` when `gh` is
+  available).
+- **Tone** — skim existing public copy (a `blog/`, landing page, prior posts)
+  and match it. If there's none, ask the user for one line of positioning.
+- **Locale** — default **English**; switch only if the user asks.
+
+If a product claim isn't discoverable, ask one tight question rather than
+guessing.
+
+## 4. Write the drafts
+
+Read `references/platforms.md` for each channel's exact format, limits, and
+good/bad examples, then write to `build-in-public/<tag>/`:
+
+- `x-thread.md` — numbered thread: hook → 2–4 highlights → CTA + link. Annotate
+  each tweet with its character count (≤280).
+- `linkedin.md` — one narrative post + 3 highlights + link + a few hashtags.
+- `producthunt.md` — **major releases only** — tagline (≤60), description, first
+  maker comment, topics, gallery shot list, links.
+
+Every file opens with `> DRAFT — review & edit before posting; nothing is
+auto-posted.` Honest copy only: no metrics you can't back, no competitor-
+bashing, claim only what actually shipped.
+
+## 5. Report
+
+Tell the user the output directory, list the files written, and give a posting
+checklist: post the X thread · post on LinkedIn · (major) submit to Product Hunt
+· attach screenshots/GIF · double-check every link. Flag anything you had to
+assume so they can fix it before posting.
