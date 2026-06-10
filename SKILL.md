@@ -79,3 +79,25 @@ Tell the user the output directory, list the files written, and give a posting
 checklist: post the X thread · post on LinkedIn · (major) submit to Product Hunt
 · attach screenshots/GIF · double-check every link. Flag anything you had to
 assume so they can fix it before posting.
+
+## 6. Publish (optional)
+
+By default the skill stops at drafts and you post by hand. To auto-publish the
+**LinkedIn** draft, wire a [Postiz](https://postiz.com) instance (self-host or
+cloud) and run `scripts/post.mjs` on the reviewed file:
+
+```bash
+POSTIZ_API_KEY=<key> POSTIZ_API_URL=https://<host>/api/public/v1 \
+  node scripts/post.mjs --file build-in-public/<tag>/linkedin.md
+# add --schedule 2026-06-11T09:00:00Z to schedule instead of posting now
+```
+
+It auto-discovers the connected LinkedIn channel, strips the `> DRAFT` marker,
+and posts the file verbatim. **Run it only after you've reviewed/edited the
+file** — that's the publish gate. Setup + the LinkedIn OAuth scope caveat are in
+`references/postiz.md`.
+
+- **X** stays manual: X's API is pay-per-use since 2026 (~$0.01/post, $0.20 with
+  a link) — copy-paste the `x-thread.md` draft for free.
+- **Product Hunt** stays manual: no launch API.
+
