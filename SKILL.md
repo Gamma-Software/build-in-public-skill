@@ -82,20 +82,23 @@ assume so they can fix it before posting.
 
 ## 6. Publish (optional)
 
-By default the skill stops at drafts and you post by hand. To auto-publish the
-**LinkedIn** draft, wire a [Postiz](https://postiz.com) instance (self-host or
-cloud) and run `scripts/post.mjs` on the reviewed file:
+**The skill's job is the drafts (steps 1–5). Publishing is entirely optional** —
+by default you copy-paste the files yourself. Two opt-in publishers ship for the
+**LinkedIn** draft; both post only the file you've already reviewed:
 
-```bash
-POSTIZ_API_KEY=<key> POSTIZ_API_URL=https://<host>/api/public/v1 \
-  node scripts/post.mjs --file build-in-public/<tag>/linkedin.md
-# add --schedule 2026-06-11T09:00:00Z to schedule instead of posting now
-```
-
-It auto-discovers the connected LinkedIn channel, strips the `> DRAFT` marker,
-and posts the file verbatim. **Run it only after you've reviewed/edited the
-file** — that's the publish gate. Setup + the LinkedIn OAuth scope caveat are in
-`references/postiz.md`.
+- **Direct, no third party** — `scripts/linkedin.mjs` calls LinkedIn's API
+  itself. One-time `login` (OAuth, token cached locally), then `post`:
+  ```bash
+  LINKEDIN_CLIENT_ID=<id> LINKEDIN_CLIENT_SECRET=<secret> \
+    node scripts/linkedin.mjs login                                  # once
+  node scripts/linkedin.mjs post --file build-in-public/<tag>/linkedin.md
+  ```
+  Personal profile (free, scope `w_member_social`). Posting as a Company Page
+  (`--org <id>`) needs LinkedIn's gated Community Management API (separate app,
+  review for production) — see the `--org` notes in the script header.
+- **Via Postiz** — `scripts/post.mjs` posts/schedules through a self-host/cloud
+  [Postiz](https://postiz.com) instance. Setup + LinkedIn scope caveat:
+  `references/postiz.md`.
 
 - **X** stays manual: X's API is pay-per-use since 2026 (~$0.01/post, $0.20 with
   a link) — copy-paste the `x-thread.md` draft for free.
